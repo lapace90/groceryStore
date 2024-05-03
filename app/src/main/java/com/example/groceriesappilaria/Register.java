@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,7 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class Register extends AppCompatActivity {
 
-    private EditText email, passwd1, passwd2;
+    private EditText email, passwd1, passwd2, userName;
 
     private Button btnRegister;
 
@@ -30,21 +31,26 @@ public class Register extends AppCompatActivity {
         passwd1 = findViewById(R.id.registerPassword1);
         passwd2 = findViewById(R.id.registerPassword2);
         btnRegister=findViewById(R.id.registerBtn);
+        userName = findViewById(R.id.userName);
 
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 UserContract userContract = new UserContract(Register.this);
+                userContract.insertionCLIENTS(email.getText().toString(), passwd1.getText().toString(), userName.getText().toString());
+                int idClient = -1;
 
-                userContract.insertionCLIENTS("example@email.com", "password123");
-
-
-                Intent registerIntent = new Intent(Register.this, Login.class);
-                startActivity(registerIntent);
-
-
+                if (idClient != -1) {
+                    Toast.makeText(getApplicationContext(), "Your account is now registered", Toast.LENGTH_LONG).show();
+                    Intent registerIntent = new Intent(Register.this, Welcome.class);
+                    startActivity(registerIntent);
+                    finish();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Registration failed", Toast.LENGTH_LONG).show();
+                }
             }
         });
+
 
 
 

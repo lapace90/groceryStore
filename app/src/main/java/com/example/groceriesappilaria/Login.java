@@ -1,6 +1,9 @@
 package com.example.groceriesappilaria;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,54 +15,60 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class Login extends AppCompatActivity {
 
-    private EditText passwordTxt, userTxt;
-    private Button loginBtn;
+    private EditText usernameEditText, passwordEditText;
+    private Button loginButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        passwordTxt = findViewById(R.id.passwordTxt);
-        userTxt = findViewById(R.id.userTxt);
-        loginBtn = findViewById(R.id.btnLogin);
+        usernameEditText = findViewById(R.id.userName);
+        passwordEditText = findViewById(R.id.passwordTxt);
+        loginButton = findViewById(R.id.btnLogin);
 
-        loginBtn.setOnClickListener(new View.OnClickListener() {
+        loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean newAccess = checkNewAccess();
-
-                if (newAccess) {
-                    // Se l'utente non esiste nel database, reindirizza alla pagina di registrazione
-                    Intent registerIntent = new Intent(Login.this, Register.class);
-                    startActivity(registerIntent);
-                } else {
-
-                        Intent i = new Intent(getApplicationContext(), Welcome.class);
-                        Toast.makeText(Login.this, "Welcome!" , Toast.LENGTH_SHORT).show();
-                        startActivity(i);
-                        finish();
-                    }
-                }
-
+                handleLogin();
+            }
         });
     }
 
-    private boolean checkNewAccess() {
-        String username = userTxt.getText().toString();
-        String password = passwordTxt.getText().toString();
-        // Implementa la logica per verificare se l'utente esiste già nel database
-        // Questo è solo un esempio, dovresti sostituire questa implementazione con la tua logica effettiva
-        boolean userExists = checkUserExists(username, password);
+    private void handleLogin() {
+        String username = usernameEditText.getText().toString();
+        String password = passwordEditText.getText().toString();
 
-        // Se l'utente non esiste nel database, è un nuovo accesso
-        return !userExists;
+        boolean isNewUser = checkIfNewUser(username, password);
+
+        if (isNewUser) {
+            redirectToRegistration();
+        } else {
+            redirectToWelcomePage();
+        }
     }
 
-    // Metodo per verificare se l'utente esiste già nel database
-    private boolean checkUserExists(String username, String password) {
-        // Implementa la logica per verificare se l'utente esiste già nel database
-        // Questo è solo un esempio, dovresti sostituire questa implementazione con la tua logica effettiva
-        return false;
+    private boolean checkIfNewUser(String username, String password) {
+        try (UserContract userContract = new UserContract(this);
+             SQLiteDatabase db = userContract.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM " + UserContract.NOM_TABLE +
+                             " WHERE " + UserContract.COL3 + " = ? AND " +
+                             UserContract.COL2 + " = ?",
+                     new String[]{username, password})) {
+
+            return !cursor.moveToFirst();
+        }
+    }
+
+    private void redirectToRegistration() {
+        Intent registerIntent = new Intent(Login.this, Register.class);
+        startActivity(registerIntent);
+    }
+
+    private void redirectToWelcomePage() {
+        Intent welcomeIntent = new Intent(Login.this, Welcome.class);
+        Toast.makeText(Login.this, "Welcome!", Toast.LENGTH_SHORT).show();
+        startActivity(welcomeIntent);
+        finish();
     }
 }
